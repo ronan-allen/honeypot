@@ -3,6 +3,11 @@
 This is a small honeypot project that will listen for (currently telnet) traffic and output details about that session and the source IP address to a database.  
 I pull the data from that database for a [Grafana](https://grafana.com/) instance to then create visualizations.
 
+## Quick Note
+I run this script as a service (honeypot.service)  
+This requires honeypot.py to be in '~/opt/honeypot'  
+Otherwise, the script will run fine standalone. 
+
 # Current Capabilities
 - Capture Telnet traffic (Port 23)
 - Capture data input into the telent session
