@@ -8,7 +8,6 @@ from ipwhois import IPWhois
 import configparser
 import logging
 
-# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_ipinfo(ip_address):
@@ -58,19 +57,14 @@ def setup_database():
     db_config = get_db_config()
     connection = None
     try:
-        # Connect to MySQL server
         connection = mysql.connector.connect(
             host=db_config['host'],
             user=db_config['user'],
             password=db_config['password']
         )
         cursor = connection.cursor()
-
-        # Create database if it doesn't exist
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_config['database']}")
         cursor.execute(f"USE {db_config['database']}")
-
-        # Define table schema
         table_schema = {
             'id': 'INT AUTO_INCREMENT PRIMARY KEY',
             'timestamp': 'DATETIME',
@@ -83,8 +77,6 @@ def setup_database():
             'latitude': 'VARCHAR(255)',
             'longitude': 'VARCHAR(255)'
         }
-
-        # Create table if it doesn't exist
         create_table_query = f"""
         CREATE TABLE IF NOT EXISTS telnet_data (
             {', '.join([f'{column} {definition}' for column, definition in table_schema.items()])}
@@ -92,15 +84,12 @@ def setup_database():
         """
         cursor.execute(create_table_query)
         connection.commit()
-
-        # Check and update schema if necessary
         cursor.execute("DESCRIBE telnet_data")
         existing_columns = {column[0] for column in cursor.fetchall()}
         for column, definition in table_schema.items():
             if column not in existing_columns:
                 cursor.execute(f"ALTER TABLE telnet_data ADD COLUMN {column} {definition}")
                 connection.commit()
-
     except Error as e:
         print(f"Error setting up database: {e}")
     finally:
@@ -118,7 +107,7 @@ def save_to_database(timestamp, content, source_ip, dest_ip, isp, source_country
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
         abuse_email = get_abuse_email(source_ip)
         isp, latitude, longitude, source_country = get_ipinfo(source_ip)
-        dest_ip = source_ip  # Keep dest_ip as source_ip
+        dest_ip = source_ip
         record_to_insert = (timestamp, content, source_ip, dest_ip, isp, source_country, abuse_email, latitude, longitude)
         cursor.execute(insert_query, record_to_insert)
         connection.commit()
