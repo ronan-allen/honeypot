@@ -5,6 +5,7 @@ import mysql.connector
 from mysql.connector import Error
 import requests
 from ipwhois import IPWhois
+import configparser
 
 def get_ipinfo(ip_address):
     url = f'http://ipinfo.io/{ip_address}/json'
@@ -34,17 +35,22 @@ def get_abuse_email(ip_address):
 def parse_telnet(data):
     return (data,)
 
+def get_db_config():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    db_config = {
+        'host': config['mysql']['host'],
+        'database': config['mysql']['database'],
+        'user': config['mysql']['user'],
+        'password': config['mysql']['password']
+    }
+    return db_config
+
 def save_to_database(timestamp, content, source_ip, dest_ip, isp, source_country, abuse_email, latitude, longitude):
+    db_config = get_db_config()
     connection = None
     try:
-        connection = mysql.connector.connect(
-            host='your_database_ip',
-            user='your_database_user',
-            password='your_database_password',
-            database='your_database_name',
-            allow_local_infile=True,
-            auth_plugin='mysql_native_password'
-        )
+        connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
         insert_query = """INSERT INTO telnet_data (timestamp, content, source_ip, dest_ip, isp, source_country, abuse_email, latitude, longitude)
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
